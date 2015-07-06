@@ -5,6 +5,29 @@
     <title>ViewPut.io - Put.io video viewer</title>
   </head>
   <body>
-    Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+    <button type="button" name="button" onclick="myFunction()">Authenticate me!</button>
+
+    <script type="text/javascript">
+      var ipc = require('ipc');
+
+      // User wishes to authenticate our application
+      function myFunction() {
+        // Use IPC to send a message on a specific channel from Render process to the Main process
+        // The message is of little use as this moment, channel name is of utmost important.
+        alert("Sending auth request");
+        ipc.send('auth-request', "Request Authentication");
+      }
+
+      // Listen to the auth-result channel for asynchronous messages from the Main process
+      ipc.on('auth-result', function (arg) {
+        console.log(arg);
+        // Change page HTML according to the status
+        if (arg.startsWith('Success')) {
+          document.write("Successfully Authenticated, thanks bruh!" + "\n" + arg);
+        } else {
+          document.write("Something went totally wrong, let's not talk for a while :-(");
+        }
+      });
+    </script>
   </body>
 </html>
