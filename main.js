@@ -37,7 +37,8 @@ app.on('ready', function () {
       if (error) {
         console.error("User closed window and did not authenticate");
       } else {
-        mainWindow.webContents.send('auth-result', 'Success with code = ' + result);  // Send 'Success' to render process
+        getToken(result);
+        // mainWindow.webContents.send('auth-result', 'Success with code = ' + result);  // Send 'Success' to render process
       }
     });
   });
@@ -93,4 +94,21 @@ function authenticate (callback) {
       callback(new Error("Authentication failed, window closed"));
     }
   });
+}
+
+
+/* Gets access token */
+function getToken(auth_code) {
+  console.log("INSIDE GET TOKEN");
+  let client_id = "2060";
+  let client_secret = "nvygh6u4r1cdxb0q17w9"; // This demo app will be un-registered from Put.io so no point in trying malice
+  let callback_uri = "https://localhost/callback";
+  let url = `https://api.put.io/v2/oauth2/access_token?client_id=${client_id}&client_secret=${client_secret}&grant_type=authorization_code&redirect_uri=${callback_uri}&code=${auth_code}`;
+  let request = require('superagent');
+
+  request
+    .get(url)
+    .end(function (err, res) {
+      console.log(res.text);  // Prints json as string with format: { "acess_token" : "ABCDEG" }
+    });
 }

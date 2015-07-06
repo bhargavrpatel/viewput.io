@@ -13,6 +13,7 @@
     "url": "https://github.com/bhargavrpatel/viewput.io.git"
   },
   "dependencies": {
-    "electron-prebuilt": "^0.29.1"
+    "electron-prebuilt": "^0.29.1",
+    "superagent": "^1.2.0"
   }
 }

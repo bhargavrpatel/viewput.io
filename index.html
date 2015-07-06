@@ -14,7 +14,6 @@
       function myFunction() {
         // Use IPC to send a message on a specific channel from Render process to the Main process
         // The message is of little use as this moment, channel name is of utmost important.
-        alert("Sending auth request");
         ipc.send('auth-request', "Request Authentication");
       }
 
