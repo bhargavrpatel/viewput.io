@@ -1,17 +1,18 @@
-"use strict"
+"use strict";
 
-var
+let
     _             = require('lodash'),          // Module to ease the pain!
-    Promise       = require('es6-promise').Promise,
+    // Promise       = require('es6-promise').Promise,
     app           = require('app'),
     ipc           = require('ipc'),             // Module to have interprocess communication
     request       = require('superagent'),      // Module used to create/recieve HTTP requests
     mainWindow    = null,                       // Keep a global reference to avoid it being garbage collected
     BrowserWindow = require('browser-window');  // Module to create browser windows
 
+require("babel/polyfill");
 
 // If all windows are closed ...
-app.on('window-all-closed', function () {
+app.on('window-all-closed', () => {
   // Quit the application if we are not on an Apple machine (darwin)
   if (process.platform != 'darwin') {
     app.quit();
@@ -19,7 +20,7 @@ app.on('window-all-closed', function () {
 });
 
 // When the application is ready (when Electron is ready to create browser windows)
-app.on('ready', function () {
+app.on('ready', () => {
   mainWindow = new BrowserWindow({      // Create the browser window
     width: 800,
     height: 600,
@@ -27,41 +28,27 @@ app.on('ready', function () {
   });
 
   // Load the first html file
-  mainWindow.loadUrl('file://' + __dirname + '/index.html');
+  mainWindow.loadUrl('file://' + __dirname + '/../views/index.html');
 
   // Make the window visible when HTML is done loading
   // This is non-essential but it is a good practice to hide non-loaded pages
-  mainWindow.webContents.on('did-stop-loading', function () {
-    mainWindow.show();  // Show window
-  });
+  mainWindow.webContents.on('did-stop-loading', () => { mainWindow.show(); });
 
-  ipc.on('auth-request', function (event, arg) {
-    authenticateAsync()
-      .then(getTokenAsync)
-      .then(getFilesAsync)
-      .then((files) => {
-        _.each(this, function(file) {
-          console.log(file.name);
-        });
-      });
-  });
-
-    // authenticateAsync().then(function (auth_code) {
-    //   return getTokenAsync(auth_code);
-    // }).then(function (token) {
-    //   return getFilesAsync(token)
-    // }).then(function (files) {
-    //   _.each(files, function (file) {
-    //     console.log(file.name);
+  ipc.on('auth-request', (event, arg) => {
+    // console.log(arg);
+    // authenticateAsync()
+    //   .then(getTokenAsync)
+    //   .then(getFilesAsync)
+    //   .then((files) => {
+    //     console.log(files);
     //   });
-    // }).catch(function (err) {
-    //   console.error(err);
-    // });
-  // });
-
-  mainWindow.on('closed', function () {
-    mainWindow = null;  // Dereference window
+    authenticateAsync().then((result) => {
+      console.log(result);
+    })
   });
+
+  // Dereference window
+  mainWindow.on('closed', () => { mainWindow = null; });
 });
 
 ////////////////////////////////
@@ -96,7 +83,7 @@ function authenticate(callback) {
   });
 
   // Detect form completion event
-  authWindow.webContents.on('did-get-redirect-request', function (event, oldUrl, newUrl, isMainFrame) {
+  authWindow.webContents.on('did-get-redirect-request', (event, oldUrl, newUrl, isMainFrame) => {
     if (newUrl.startsWith(callback_uri)) {
       // Strip code from the uri (Expected format: https://localhost/callback?code=COOKIES-HERE)
       code = newUrl.split(/[=]/)[1];
@@ -105,7 +92,7 @@ function authenticate(callback) {
   });
 
   // Close window
-  authWindow.on('close', function () {
+  authWindow.on('close', () => {
     authWindow = null;
 
     if (code) {
@@ -130,7 +117,7 @@ function getToken(auth_code, callback) {
   // Parse json to get the token and return it via callback.
   request
     .get(url)
-    .end(function (err, res) {
+    .end((err, res) => {
       // console.log(res.text);  // Prints json as string with format: { "acess_token" : "ABCDEG" }
       if (err) {
         callback(new Error ("Failed to obtain the access token: " + err));
@@ -146,7 +133,7 @@ function getFiles(auth_token, callback) {
   let url = `https://api.put.io/v2/files/list?oauth_token=${auth_token}`;
   request
     .get(url)
-    .end(function (err, res) {
+    .end((err, res) => {
         if (err) {
           callback(new Error ("Failed to obtain list of files: " + err));
         } else {
@@ -160,8 +147,8 @@ function getFiles(auth_token, callback) {
 //////////////////////////////
 
 function authenticateAsync() {
-  return new Promise(function (fulfill, reject) {
-    authenticate(function (err, result) {
+  return new Promise((fulfill, reject) => {
+    authenticate((err, result) => {
       if (err) {
         reject(err);
       } else {
@@ -172,19 +159,25 @@ function authenticateAsync() {
 }
 
 function getTokenAsync(auth_code) {
-  return new Promise(function (fulfill, reject) {
-    getToken(auth_code, function (error, result) {
-      if (error) reject(error);
-      else fulfill(result);
+  return new Promise((fulfill, reject) => {
+    getToken(auth_code, (error, result) => {
+      if (error) {
+        reject(error)
+      } else {
+        fulfill(result);
+      }
     });
   });
 }
 
 function getFilesAsync(auth_token) {
-  return new Promise(function (fulfill, reject) {
-    getFiles(auth_token, function (error, result) {
-      if (error) reject(error);
-      else fulfill(result);
+  return new Promise((fulfill, reject) => {
+    getFiles(auth_token, (error, result) => {
+      if (error) {
+        reject(error)
+      } else {
+        fulfill(result);
+      }
     });
   });
 }
