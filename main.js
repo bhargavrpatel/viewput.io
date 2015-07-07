@@ -2,9 +2,10 @@
 
 var
     app           = require('app'),
-    ipc           = require('ipc'),   // Module to have interprocess communication
-    mainWindow    = null,             // Keep a global reference to avoid it being garbage collected
-    BrowserWindow = require('browser-window'); // Module to create browser windows
+    ipc           = require('ipc'),             // Module to have interprocess communication
+    request       = require('superagent'),      // Module used to create/recieve HTTP requests 
+    mainWindow    = null,                       // Keep a global reference to avoid it being garbage collected
+    BrowserWindow = require('browser-window');  // Module to create browser windows
 
 
 // If all windows are closed ...
@@ -39,7 +40,7 @@ app.on('ready', function () {
       } else {
         getToken(result, function(err, result) {
           if (!err) {
-            // This is just for testing purposes, will chain with more stuff later. 
+            // This is just for testing purposes, will chain with more stuff later.
             mainWindow.webContents.send('auth-result', 'Success with code = ' + result);  // Send 'Success' to render process
           }
         });
@@ -108,8 +109,6 @@ function getToken(auth_code, callback) {
   let client_secret = "nvygh6u4r1cdxb0q17w9"; // This demo app will be un-registered from Put.io so no point in trying malice
   let callback_uri = "https://localhost/callback";
   let url = `https://api.put.io/v2/oauth2/access_token?client_id=${client_id}&client_secret=${client_secret}&grant_type=authorization_code&redirect_uri=${callback_uri}&code=${auth_code}`;
-  let request = require('superagent');
-
 
   // use superagent to send GET request to obtain token, given the auth code
   // Convert returned response' text to JSON object
