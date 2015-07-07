@@ -36,18 +36,28 @@ app.on('ready', function () {
   });
 
   ipc.on('auth-request', function (event, arg) {
-    authenticateAsync().then(function (auth_code) {
-      return getTokenAsync(auth_code);
-    }).then(function (token) {
-      return getFilesAsync(token)
-    }).then(function (files) {
-      _.each(files, function (file) {
-        console.log(file.name);
+    authenticateAsync()
+      .then(getTokenAsync)
+      .then(getFilesAsync)
+      .then((files) => {
+        _.each(this, function(file) {
+          console.log(file.name);
+        });
       });
-    }).catch(function (err) {
-      console.error(err);
-    });
   });
+
+    // authenticateAsync().then(function (auth_code) {
+    //   return getTokenAsync(auth_code);
+    // }).then(function (token) {
+    //   return getFilesAsync(token)
+    // }).then(function (files) {
+    //   _.each(files, function (file) {
+    //     console.log(file.name);
+    //   });
+    // }).catch(function (err) {
+    //   console.error(err);
+    // });
+  // });
 
   mainWindow.on('closed', function () {
     mainWindow = null;  // Dereference window
