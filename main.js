@@ -35,23 +35,18 @@ app.on('ready', function () {
     mainWindow.show();  // Show window
   });
 
-  ipc.on('auth-request', function(event, arg) {
-    authenticateAsync()
-      .then(function (result) {
-        getTokenAsync(result)
-          .then(function (res) {
-            getFilesAsync(res)
-              .then(function (result) {
-                _.each(result, function (item) {
-                  console.log(item.name);
-                });
-              })
-          })
-      })
-      .catch(function (err) {
-        console.error(err);
+  ipc.on('auth-request', function (event, arg) {
+    authenticateAsync().then(function (auth_code) {
+      return getTokenAsync(auth_code);
+    }).then(function (token) {
+      return getFilesAsync(token)
+    }).then(function (files) {
+      _.each(files, function (file) {
+        console.log(file.name);
       });
-
+    }).catch(function (err) {
+      console.error(err);
+    });
   });
 
   mainWindow.on('closed', function () {
@@ -100,7 +95,7 @@ function authenticate(callback) {
   });
 
   // Close window
-  authWindow.on('close', function() {
+  authWindow.on('close', function () {
     authWindow = null;
 
     if (code) {
