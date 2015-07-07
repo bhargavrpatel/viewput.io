@@ -1,9 +1,10 @@
 "use strict"
 
 var
+    _             = require('lodash'),          // Module to ease the pain!
     app           = require('app'),
     ipc           = require('ipc'),             // Module to have interprocess communication
-    request       = require('superagent'),      // Module used to create/recieve HTTP requests 
+    request       = require('superagent'),      // Module used to create/recieve HTTP requests
     mainWindow    = null,                       // Keep a global reference to avoid it being garbage collected
     BrowserWindow = require('browser-window');  // Module to create browser windows
 
@@ -40,8 +41,14 @@ app.on('ready', function () {
       } else {
         getToken(result, function(err, result) {
           if (!err) {
-            // This is just for testing purposes, will chain with more stuff later.
-            mainWindow.webContents.send('auth-result', 'Success with code = ' + result);  // Send 'Success' to render process
+            getFiles(result, function (err, result) {
+              if (!err) {
+                // console.log(result);
+                // _.map(result, function (item) {
+                //   console.log(item.name);
+                // });
+              }
+            });
           }
         });
       }
@@ -122,5 +129,20 @@ function getToken(auth_code, callback) {
       } else {
         callback(null, JSON.parse(res.text).access_token);
       }
+    });
+}
+
+
+/* Gather list of user files on the server */
+function getFiles(auth_token, callback) {
+  let url = `https://api.put.io/v2/files/list?oauth_token=${auth_token}`;
+  request
+    .get(url)
+    .end(function (err, res) {
+        if (err) {
+          callback(new Error ("Failed to obtain list of files: " + err));
+        } else {
+          callback(null, JSON.parse(res.text).files);
+        }
     });
 }
