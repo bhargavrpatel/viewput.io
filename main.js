@@ -2,6 +2,7 @@
 
 var
     _             = require('lodash'),          // Module to ease the pain!
+    Promise       = require('es6-promise').Promise,
     app           = require('app'),
     ipc           = require('ipc'),             // Module to have interprocess communication
     request       = require('superagent'),      // Module used to create/recieve HTTP requests
@@ -35,24 +36,22 @@ app.on('ready', function () {
   });
 
   ipc.on('auth-request', function(event, arg) {
-    authenticate(function (error, result) {  // Call the authentication method which will return the authentication code to us
-      if (error) {
-        console.error("User closed window and did not authenticate");
-      } else {
-        getToken(result, function(err, result) {
-          if (!err) {
-            getFiles(result, function (err, result) {
-              if (!err) {
-                // console.log(result);
-                // _.map(result, function (item) {
-                //   console.log(item.name);
-                // });
-              }
-            });
-          }
-        });
-      }
-    });
+    authenticateAsync()
+      .then(function (result) {
+        getTokenAsync(result)
+          .then(function (res) {
+            getFilesAsync(res)
+              .then(function (result) {
+                _.each(result, function (item) {
+                  console.log(item.name);
+                });
+              })
+          })
+      })
+      .catch(function (err) {
+        console.error(err);
+      });
+
   });
 
   mainWindow.on('closed', function () {
@@ -60,9 +59,12 @@ app.on('ready', function () {
   });
 });
 
+////////////////////////////////
+/* FUNCTIONS WITH CALL BACKS  */
+////////////////////////////////
 
 /* Gets authentication code */
-function authenticate (callback) {
+function authenticate(callback) {
   // Use let instead of var for block scoped variables, this is why we had to add "use strict" at the top of the file
   let client_id = "2060";
   let callback_uri = "https://localhost/callback";
@@ -100,18 +102,19 @@ function authenticate (callback) {
   // Close window
   authWindow.on('close', function() {
     authWindow = null;
+
     if (code) {
       callback(null, code);
     } else {
-      callback(new Error("Authentication failed, window closed"));
+      callback(new Error("Could not Authenticate application"));
     }
+
   });
 }
 
 
 /* Gets access token */
 function getToken(auth_code, callback) {
-  console.log("INSIDE GET TOKEN");
   let client_id = "2060";
   let client_secret = "nvygh6u4r1cdxb0q17w9"; // This demo app will be un-registered from Put.io so no point in trying malice
   let callback_uri = "https://localhost/callback";
@@ -145,4 +148,38 @@ function getFiles(auth_token, callback) {
           callback(null, JSON.parse(res.text).files);
         }
     });
+}
+
+//////////////////////////////
+/* FUNCTIONS WITH PROMISES  */
+//////////////////////////////
+
+function authenticateAsync() {
+  return new Promise(function (fulfill, reject) {
+    authenticate(function (err, result) {
+      if (err) {
+        reject(err);
+      } else {
+        fulfill(result);
+      }
+    });
+  });
+}
+
+function getTokenAsync(auth_code) {
+  return new Promise(function (fulfill, reject) {
+    getToken(auth_code, function (error, result) {
+      if (error) reject(error);
+      else fulfill(result);
+    });
+  });
+}
+
+function getFilesAsync(auth_token) {
+  return new Promise(function (fulfill, reject) {
+    getFiles(auth_token, function (error, result) {
+      if (error) reject(error);
+      else fulfill(result);
+    });
+  });
 }
