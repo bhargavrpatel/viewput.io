@@ -15,7 +15,6 @@
   "dependencies": {
     "electron-prebuilt": "^0.29.1",
     "es6-promise": "^2.3.0",
-    "es6-shim": "^0.32.2",
     "lodash": "^3.10.0",
     "superagent": "^1.2.0"
   }
