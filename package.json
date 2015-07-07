@@ -17,5 +17,9 @@
     "es6-promise": "^2.3.0",
     "lodash": "^3.10.0",
     "superagent": "^1.2.0"
+  },
+  "devDependencies": {
+    "gulp-babel": "^5.1.0",
+    "gulp-rename": "^1.2.2"
   }
 }
