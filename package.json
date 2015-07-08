@@ -2,9 +2,9 @@
   "name": "viewputio",
   "version": "0.1.0",
   "description": "Video viewer for Put.io website",
-  "main": "app/main.js",
+  "main": "app/main.dist.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "gulp transpile"
   },
   "author": "Bhargav R. Patel",
   "license": "MIT",
