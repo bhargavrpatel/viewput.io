@@ -28,7 +28,7 @@ app.on('ready', () => {
   });
 
   // Load the first html file
-  mainWindow.loadUrl('file://' + __dirname + '/../views/index.html');
+  mainWindow.loadUrl('file://' + __dirname + '/../browser/index.html');
 
   // Make the window visible when HTML is done loading
   // This is non-essential but it is a good practice to hide non-loaded pages
