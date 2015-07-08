@@ -30,3 +30,4 @@ gulp.task('transpile-scripts', function () {
 
 
 gulp.task('default', ['transpile-app'])
+gulp.task('transpile', ['transpile-app', 'transpile-scripts'])
