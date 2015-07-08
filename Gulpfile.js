@@ -54,5 +54,7 @@ function compileTAGtoJS() {
 }
 
 
-gulp.task('default', ['transpile-app'])
-gulp.task('transpile', ['transpile-app', 'transpile-scripts'])
+
+gulp.task('transpile', ['transpile-app', 'transpile-scripts']);
+gulp.task('build', ['transpile', 'riot']);
+gulp.task('default', ['build']);
