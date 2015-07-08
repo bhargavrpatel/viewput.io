@@ -5,7 +5,7 @@
   "main": "app/main.dist.js",
   "scripts": {
     "build": "gulp transpile",
-    "start": "gulp transpile && node_modules\\electron-prebuilt\\dist\\electron.exe ."
+    "start": "gulp && node_modules\\electron-prebuilt\\dist\\electron.exe ."
   },
   "author": "Bhargav R. Patel",
   "license": "MIT",

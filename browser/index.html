@@ -5,9 +5,11 @@
     <title>ViewPut.io - Put.io video viewer</title>
   </head>
   <body>
+    <hello-world></hello-world>
     <button type="button" name="button" onclick="myFunction()">Authenticate me!</button>
 
     <script type="text/javascript">
+      var riot = require('riot');
       var ipc = require('ipc');
 
       // User wishes to authenticate our application
@@ -28,5 +30,10 @@
         }
       });
     </script>
+
+    <!-- Import our first test tag element and mount it to the DOM with the
+         name parameter as required by our custom component             -->
+    <script type="text/javascript" src="./build/js/riot-components/test.tag.js"></script>
+    <script>riot.mount('hello-world', {name: "Bhargav R. Patel"})</script>
   </body>
 </html>
