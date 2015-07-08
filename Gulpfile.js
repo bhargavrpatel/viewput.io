@@ -5,6 +5,8 @@ var
     uglify  =   require('gulp-uglify'),
     strip   =   require('gulp-strip-comments'),
     rename  =   require('gulp-rename');
+    less    =   require('gulp-less');
+    minify  =   require('gulp-minify-css');
     riot    =   require('riot');
 
 // Transpile ES6 app to ES5 using babel
@@ -44,6 +46,15 @@ gulp.task('riot', function() {
     .pipe(gulp.dest('browser/build/js/riot-components'))
 });
 
+// Compile and compress LESS stylesheets
+gulp.task('less', function() {
+  return gulp.src('browser/src/less/**.less')
+    .pipe(less({
+      paths: [ require('path').join(__dirname, 'less', 'includes') ]
+    }))
+    .pipe(minify())
+    .pipe(gulp.dest('browser/build/stylesheets'))
+});
 
 
 gulp.task('transpile', ['transpile-app', 'transpile-scripts'])
