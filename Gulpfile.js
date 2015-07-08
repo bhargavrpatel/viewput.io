@@ -7,7 +7,7 @@ var
     rename  = require('gulp-rename');
 
 // Transpile ES6 app to ES5 using babel
-gulp.task('transpile', function () {
+gulp.task('transpile-app', function () {
   return gulp.src('app/main.es6.js')
     .pipe(strip())                       // Strip comments
     .pipe(babel())                       // Pipe the file into babel
@@ -29,4 +29,4 @@ gulp.task('transpile-scripts', function () {
 });
 
 
-gulp.task('default', ['transpile'])
+gulp.task('default', ['transpile-app'])
