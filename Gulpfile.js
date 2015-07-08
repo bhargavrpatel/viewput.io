@@ -44,6 +44,20 @@ gulp.task('riot', function() {
     .pipe(gulp.dest('browser/build/js/riot-components'))
 });
 
+
+
+gulp.task('transpile', ['transpile-app', 'transpile-scripts'])
+gulp.task('build', ['transpile', 'riot'])
+gulp.task('default', ['build'])
+
+
+
+
+
+/* ------------------------------------ */
+//        CUSTOM FUNCTIONS BELOW        //
+/* ------------------------------------ */
+
 /* Converts Riotjs DSL to javascript */
 function compileTAGtoJS() {
   function transform(file, callback) {
@@ -52,9 +66,3 @@ function compileTAGtoJS() {
   }
   return require('event-stream').map(transform);
 }
-
-
-
-gulp.task('transpile', ['transpile-app', 'transpile-scripts']);
-gulp.task('build', ['transpile', 'riot']);
-gulp.task('default', ['build']);
