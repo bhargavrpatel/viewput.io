@@ -16,6 +16,7 @@
   "dependencies": {
     "electron-prebuilt": "^0.29.1",
     "lodash": "^3.10.0",
+    "lowdb": "^0.10.1",
     "riot": "^2.2.2-beta",
     "superagent": "^1.2.0"
   },
