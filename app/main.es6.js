@@ -2,12 +2,14 @@
 
 let
     _             = require('lodash'),          // Module to ease the pain!
-    // Promise       = require('es6-promise').Promise,
+    low           = require('lowdb'),
     app           = require('app'),
     ipc           = require('ipc'),             // Module to have interprocess communication
     request       = require('superagent'),      // Module used to create/recieve HTTP requests
     mainWindow    = null,                       // Keep a global reference to avoid it being garbage collected
     BrowserWindow = require('browser-window');  // Module to create browser windows
+
+var db = low('db.json');
 
 require("babel/polyfill");
 
@@ -21,6 +23,7 @@ app.on('window-all-closed', () => {
 
 // When the application is ready (when Electron is ready to create browser windows)
 app.on('ready', () => {
+
   mainWindow = new BrowserWindow({      // Create the browser window
     width: 800,
     height: 600,
@@ -35,16 +38,7 @@ app.on('ready', () => {
   mainWindow.webContents.on('did-stop-loading', () => { mainWindow.show(); });
 
   ipc.on('auth-request', (event, arg) => {
-    // console.log(arg);
-    // authenticateAsync()
-    //   .then(getTokenAsync)
-    //   .then(getFilesAsync)
-    //   .then((files) => {
-    //     console.log(files);
-    //   });
-    authenticateAsync().then((result) => {
-      console.log(result);
-    })
+    authAndTokenAsync(false);
   });
 
   // Dereference window
@@ -56,7 +50,7 @@ app.on('ready', () => {
 ////////////////////////////////
 
 /* Gets authentication code */
-function authenticate(callback) {
+function authenticate(retry, callback) {
   // Use let instead of var for block scoped variables, this is why we had to add "use strict" at the top of the file
   let client_id = "2060";
   let callback_uri = "https://localhost/callback";
@@ -64,6 +58,13 @@ function authenticate(callback) {
   // let url = `https://put.io`;  // uncommnet and comment line below to logout for testing only
   let url = `https://api.put.io/v2/oauth2/authenticate?client_id=${client_id}&response_type=code&redirect_uri=${callback_uri}`;
   let code = null;
+
+  // If we already have the Authorization grant code, skip the whole OAuth flow
+  if (( db('OAuth').size() > 0 ) && ( db('OAuth').pluck('grant')[0] ) && !retry) {
+    console.log("Grant already in database, skipping whole OAuth flow");
+    return callback(null, db('OAuth').pluck('grant')[0]);
+  }
+
 
   // Create authentication window, pointing to Put.io API auth page
   let authWindow = new BrowserWindow({
@@ -96,6 +97,20 @@ function authenticate(callback) {
     authWindow = null;
 
     if (code) {
+      // If database does not have the grant field push it
+      if (typeof (db('OAuth').pluck('grant')[0]) == 'undefined') {
+        console.log(("Adding grant code for the first time"));
+        db('OAuth')
+          .push({grant: code})
+          .save()
+      } else {
+        console.log(("Replacing grant code"));
+        db('OAuth')
+          .chain()
+          .find({ grant: db('OAuth').pluck('grant')[0] })
+          .assign({ grant: code})
+          .value()
+      }
       callback(null, code);
     } else {
       callback(new Error("Could not Authenticate application"));
@@ -120,8 +135,10 @@ function getToken(auth_code, callback) {
     .end((err, res) => {
       // console.log(res.text);  // Prints json as string with format: { "acess_token" : "ABCDEG" }
       if (err) {
-        callback(new Error ("Failed to obtain the access token: " + err));
+        console.log(err.code);
+        callback(err);
       } else {
+        console.log("SUCCESS");
         callback(null, JSON.parse(res.text).access_token);
       }
     });
@@ -146,9 +163,10 @@ function getFiles(auth_token, callback) {
 /* FUNCTIONS WITH PROMISES  */
 //////////////////////////////
 
-function authenticateAsync() {
+/* Call authenticate function and returns a promise */
+function authenticateAsync(retry) {
   return new Promise((fulfill, reject) => {
-    authenticate((err, result) => {
+    authenticate(retry, (err, result) => {
       if (err) {
         reject(err);
       } else {
@@ -158,6 +176,7 @@ function authenticateAsync() {
   });
 }
 
+/* Call getToken function and returns a promise */
 function getTokenAsync(auth_code) {
   return new Promise((fulfill, reject) => {
     getToken(auth_code, (error, result) => {
@@ -170,6 +189,7 @@ function getTokenAsync(auth_code) {
   });
 }
 
+/* Call getFiles function and returns a promise */
 function getFilesAsync(auth_token) {
   return new Promise((fulfill, reject) => {
     getFiles(auth_token, (error, result) => {
@@ -180,4 +200,20 @@ function getFilesAsync(auth_token) {
       }
     });
   });
+}
+
+/*
+Gets access grant code and token
+updates the database if needed and prompts retrial
+if the grant code expires in the case of revoked access
+*/
+function authAndTokenAsync(retry) {
+  authenticateAsync(retry)
+    .then(getTokenAsync)
+    .then((result) => { return result })
+    .catch((err) => {
+      if (err.code == "ECONNREFUSED") {
+        return authAndTokenAsync(true)
+      }
+    });
 }
