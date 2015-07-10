@@ -38,7 +38,10 @@ app.on('ready', () => {
   mainWindow.webContents.on('did-stop-loading', () => { mainWindow.show(); });
 
   ipc.on('auth-request', (event, arg) => {
-    authAndTokenAsync(false);
+    authAndTokenAsync()
+      .getAccountAsync((x) => {
+        console.log(x);
+      });
   });
 
   // Dereference window
@@ -61,7 +64,7 @@ function authenticate(retry, callback) {
 
   // If we already have the Authorization grant code, skip the whole OAuth flow
   if (( db('OAuth').size() > 0 ) && ( db('OAuth').pluck('grant')[0] ) && !retry) {
-    console.log("Grant already in database, skipping whole OAuth flow");
+    console.log("Grant already in database, skipping access grant flow");
     return callback(null, db('OAuth').pluck('grant')[0]);
   }
 
@@ -102,7 +105,6 @@ function authenticate(retry, callback) {
         console.log(("Adding grant code for the first time"));
         db('OAuth')
           .push({grant: code})
-          .save()
       } else {
         console.log(("Replacing grant code"));
         db('OAuth')
@@ -121,11 +123,19 @@ function authenticate(retry, callback) {
 
 
 /* Gets access token */
-function getToken(auth_code, callback) {
+function getToken(retry, auth_code, callback) {
   let client_id = "2060";
   let client_secret = "nvygh6u4r1cdxb0q17w9"; // This demo app will be un-registered from Put.io so no point in trying malice
   let callback_uri = "https://localhost/callback";
   let url = `https://api.put.io/v2/oauth2/access_token?client_id=${client_id}&client_secret=${client_secret}&grant_type=authorization_code&redirect_uri=${callback_uri}&code=${auth_code}`;
+
+  // If we already have the Authorization grant code, skip the whole OAuth flow
+  if (( db('OAuth').size() > 0 ) && ( db('OAuth').pluck('token')[1] && !retry)) {
+    console.log("Access token already in database, skipping token flow");
+    return callback(null, db('OAuth').pluck('token')[1]);
+  }
+
+
 
   // use superagent to send GET request to obtain token, given the auth code
   // Convert returned response' text to JSON object
@@ -133,12 +143,22 @@ function getToken(auth_code, callback) {
   request
     .get(url)
     .end((err, res) => {
-      // console.log(res.text);  // Prints json as string with format: { "acess_token" : "ABCDEG" }
       if (err) {
-        console.log(err.code);
         callback(err);
       } else {
-        console.log("SUCCESS");
+
+        if (typeof (db('OAuth').pluck('token')[1]) == 'undefined') {
+          console.log(("Adding token for the first time"));
+          db('OAuth')
+            .push({ token: JSON.parse(res.text).access_token })
+        } else {
+          console.log(("Replacing grant code"));
+          db('OAuth')
+            .chain()
+            .find({ token: db('OAuth').pluck('token')[1] })
+            .assign({ token: JSON.parse(res.text).access_token})
+            .value()
+        }
         callback(null, JSON.parse(res.text).access_token);
       }
     });
@@ -152,10 +172,46 @@ function getFiles(auth_token, callback) {
     .get(url)
     .end((err, res) => {
         if (err) {
-          callback(new Error ("Failed to obtain list of files: " + err));
+          callback(err);
         } else {
           callback(null, JSON.parse(res.text).files);
         }
+    });
+}
+/* Gather user account info on the server */
+function getAccount(auth_token, callback) {
+  let url = `https://api.put.io/v2/account/info?oauth_token=${auth_token}`;
+  request
+    .get(url)
+    .end((err, res) => {
+        if (err) {
+          callback(err);
+        } else {
+          callback(null, JSON.parse(res.text).info);
+        }
+    });
+}
+
+
+/*
+Gets access grant code and token
+updates the database if needed and prompts retrial
+if the grant code expires in the case of revoked access
+*/
+function authAndToken(retry, callback) {
+  authenticateAsync(retry)      // Authenticate and get the access grant
+    .then( (x) => { return getTokenAsync(retry, x) } )
+    .then( (y) => { return getAccountAsync(y) } ) // Ensure no error occurs
+    .then( (result) => {
+      console.log(result.info);
+      callback(null, y);  // Return the token instead of result of getAccount
+    })
+    .catch((err) => {
+      if ((err.code == "ECONNREFUSED") || (err.status === 400)) {
+        return authAndToken(true)
+      } else {
+        callback(err);
+      }
     });
 }
 
@@ -164,7 +220,7 @@ function getFiles(auth_token, callback) {
 //////////////////////////////
 
 /* Call authenticate function and returns a promise */
-function authenticateAsync(retry) {
+function authenticateAsync(retry = false) {
   return new Promise((fulfill, reject) => {
     authenticate(retry, (err, result) => {
       if (err) {
@@ -177,11 +233,11 @@ function authenticateAsync(retry) {
 }
 
 /* Call getToken function and returns a promise */
-function getTokenAsync(auth_code) {
+function getTokenAsync(retry = false, auth_code) {
   return new Promise((fulfill, reject) => {
-    getToken(auth_code, (error, result) => {
+    getToken(retry, auth_code, (error, result) => {
       if (error) {
-        reject(error)
+        reject(error);
       } else {
         fulfill(result);
       }
@@ -194,7 +250,7 @@ function getFilesAsync(auth_token) {
   return new Promise((fulfill, reject) => {
     getFiles(auth_token, (error, result) => {
       if (error) {
-        reject(error)
+        reject(error);
       } else {
         fulfill(result);
       }
@@ -202,18 +258,28 @@ function getFilesAsync(auth_token) {
   });
 }
 
-/*
-Gets access grant code and token
-updates the database if needed and prompts retrial
-if the grant code expires in the case of revoked access
-*/
-function authAndTokenAsync(retry) {
-  authenticateAsync(retry)
-    .then(getTokenAsync)
-    .then((result) => { return result })
-    .catch((err) => {
-      if (err.code == "ECONNREFUSED") {
-        return authAndTokenAsync(true)
+/* Call getAccount function and returns a promise */
+function getAccountAsync(auth_token) {
+  return new Promise((fulfill, reject) => {
+    getAccount(auth_token, (error, result) => {
+      if (error) {
+        reject(error);
+      } else {
+        fulfill(result);
       }
     });
+  });
+}
+
+/* Call authAndToken function and returns a promise */
+function authAndTokenAsync(retry = false) {
+  return new Promise((fulfill, reject) => {
+    authAndToken(retry, (error, result) => {
+      if (error) {
+        reject(error);
+      } else {
+        fulfill(result);
+      }
+    });
+  });
 }
