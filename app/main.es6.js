@@ -39,7 +39,9 @@ app.on('ready', () => {
 
   ipc.on('auth-request', (event, arg) => {
     authAndTokenAsync()
-      .getAccountAsync((x) => {
+      .then(getAccountAsync)
+      .then((x) => {
+        console.log("GET ACCOUNT INFORMATION OUTPUT:\n===============================\n");
         console.log(x);
       });
   });
@@ -199,12 +201,15 @@ updates the database if needed and prompts retrial
 if the grant code expires in the case of revoked access
 */
 function authAndToken(retry, callback) {
+  let token;
   authenticateAsync(retry)      // Authenticate and get the access grant
     .then( (x) => { return getTokenAsync(retry, x) } )
-    .then( (y) => { return getAccountAsync(y) } ) // Ensure no error occurs
-    .then( (result) => {
-      console.log(result.info);
-      callback(null, y);  // Return the token instead of result of getAccount
+    .then((y) => {
+      token = y;
+      return getAccountAsync(y)
+    }) // Ensure no error occurs
+    .then((result) => {
+      callback(null, token);  // Return the token instead of result of getAccount
     })
     .catch((err) => {
       if ((err.code == "ECONNREFUSED") || (err.status === 400)) {
