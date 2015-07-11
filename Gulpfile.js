@@ -40,7 +40,6 @@ gulp.task('riot', function() {
     .pipe(babel())                       // Babel ES5 -> ES6
     .pipe(uglify())                      // uglify
     .pipe(rename(function (path) {       // Rename files so .es6.js -> .js
-      console.log(path);
       path.extname = '.tag.js';
     }))
     .pipe(gulp.dest('browser/build/js/riot-components'))
