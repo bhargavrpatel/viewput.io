@@ -22,12 +22,7 @@
       // Listen to the auth-result channel for asynchronous messages from the Main process
       ipc.on('auth-result', function (arg) {
         console.log(arg);
-        // Change page HTML according to the status
-        if (arg.startsWith('Success')) {
-          document.write("Successfully Authenticated, thanks bruh!" + "\n" + arg);
-        } else {
-          document.write("Something went totally wrong, let's not talk for a while :-(");
-        }
+        document.write("Welcome, " + arg.username + "!")
       });
     </script>
 
