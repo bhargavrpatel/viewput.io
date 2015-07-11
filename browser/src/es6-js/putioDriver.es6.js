@@ -132,7 +132,8 @@ export function getToken(retry = false, auth_code) {
 
 
 /* Logs user IN by following the auth and token procedure
-   returns a promise with user information JSON object */
+   returns a promise with token and user information (result of getUser function)
+   in an object */
 export function login(retry = false) {
   console.log("Running login function");
   let token;
@@ -148,7 +149,8 @@ export function login(retry = false) {
         return getUser(returned_token);
       })
       .then((userInfo) => {
-        resolve(userInfo.info.username)
+        const user = userInfo.info;
+        resolve({ user, token })
       })
       .catch((err) => {
         if (err.code == "ECONNREFUSED" || (err.status === 400)) {
