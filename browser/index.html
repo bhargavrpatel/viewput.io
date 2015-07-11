@@ -22,13 +22,14 @@
       // Listen to the auth-result channel for asynchronous messages from the Main process
       ipc.on('auth-result', function (arg) {
         console.log(arg);
-        document.write("Welcome, " + arg.username + "!")
+        // document.write("");
+        riot.mount('hello-world', {name: arg.username})
       });
     </script>
 
     <!-- Import our first test tag element and mount it to the DOM with the
          name parameter as required by our custom component             -->
     <script type="text/javascript" src="./build/js/riot-components/test.tag.js"></script>
-    <script>riot.mount('hello-world', {name: "Bhargav R. Patel"})</script>
+    <script></script>
   </body>
 </html>

@@ -1,5 +1,3 @@
 <hello-world>
-  <h1>Hello, { what }!</h1>
-  <h2>My name is { opts.name }</h2>
-  this.what = "asd";
+  <h1>Hello, { opts.name }!</h1>
 </hello-world>
