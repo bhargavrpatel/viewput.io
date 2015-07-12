@@ -42,16 +42,18 @@ app.on('ready', () => {
     console.log("Got auth request");
     putDriver.login()
       .then((x) => {
-        // console.log(x);
+        // User is logged in
         console.log(`Welcome, ${x.user.username}!`);
 
-        mainWindow.webContents.send('auth-result', x.user);
-
-        putDriver.getAllVideos(x.token)
-          .then((files) => {
-            db('files').push(files);
-            console.log(files.length);
-          })
+        let files = db('files').pluck('videos')[0];
+        x.files = files;
+        mainWindow.webContents.send("auth-result", x)
+        // putDriver.getAllVideos(x.token)
+        //   .then((y) => {
+        //     db('files')
+        //       .push({videos: y});
+        //     console.log(y);
+        //   })
       });
   });
 

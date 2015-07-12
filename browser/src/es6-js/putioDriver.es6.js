@@ -212,7 +212,7 @@ export function getVideos(auth_token, currentPage=1) {
           reject(err);
         } else {
           // console.log("Files: " + JSON.parse(res.text).files.length);
-          resolve(JSON.parse(res.text).files)
+          resolve(JSON.parse(res.text).files);
         }
       });
   });
@@ -225,12 +225,12 @@ export function getAllVideos(auth_token, counter=1, arr=[]) {
   return getVideos(auth_token, counter)
     .then((result) => {
       if (result.length === 0) {
-        // console.log(`result.length is zero \ntempArray length = ${tempArray.length}`);
-        return tempArray
+        console.log(`result.length is zero \ntempArray length = ${tempArray.length}`);
+        return tempArray;
       } else {
         // console.log('result.length is not zero');
-        tempArray.push(...result)
-        return getAllVideos(auth_token, counter + 1, tempArray)
+        tempArray.push(...result);
+        return getAllVideos(auth_token, counter + 1, tempArray);
       }
     })
 }
