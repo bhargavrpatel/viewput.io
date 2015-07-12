@@ -114,8 +114,6 @@ export function getToken(retry = false, auth_code) {
 
             if (typeof (db('OAuth').pluck('token')[1]) == 'undefined') {
               console.log(("Adding token for the first time"));
-              db('OAuth')
-                .push({ token: JSON.parse(res.text).access_token })
             } else {
               console.log(("Replacing grant code"));
               db('OAuth')
@@ -168,7 +166,7 @@ export function login(retry = false) {
 export function getUser(auth_token) {
   console.log("Running getUser function");
   console.log(auth_token);
-  let url = `https://api.put.io/v2/account/info?oauth_token=05PE239D`;
+  let url = `https://api.put.io/v2/account/info?oauth_token=${auth_token}`;
   return new Promise((resolve, reject) => {
     request
       .get(url)
@@ -181,54 +179,58 @@ export function getUser(auth_token) {
       });
   });
 }
-//
-// /* Lists files in a folder */
-// function listFiles(auth_token, id=0) {
-//   let url = `https://api.put.io/v2/files/list?oauth_token=${auth_token}&parent_id=${id}`;
-//   return new Promise((resolve, reject) => {
-//     request
-//       .get(url)
-//       .end((err, res) => {
-//         if (err || res.status != "OK") {
-//           reject(err);
-//         } else {
-//           resolve(res);
-//         }
-//       });
-//   });
-// }
-//
-// /* Search for files
-//    assumes the queries are perfect syntax as per ...
-//    https://put.io/v2/docs/files.html#search
-// */
-// function searchFiles(auth_token, query, page=1) {
-//   let url = `https://api.put.io/v2/files/search/${query}/page/${page}?oauth_token=${auth_token}`;
-//   return new Promise((resolve, reject) => {
-//     request
-//       .get(url)
-//       .end((err, res) => {
-//         if (err || res.status != "OK") {
-//           reject(err);
-//         } else {
-//           resolve(res);
-//         }
-//       });
-//   });
-// }
-//
-// /* Gets file download locations */
-// function getFileLocation(auth_token, id) {
-//   let url = `https://api.put.io/v2/files/${id}/download?oauth_token=${auth_token}`;
-//   return new Promise((resolve, reject) => {
-//     request
-//       .get(url)
-//       .end((err, res) => {
-//         if (err) {
-//           reject(err);
-//         } else {
-//           resolve(res);
-//         }
-//       })
-//   });
-// }
+
+
+/* Get list of all files in an account and return a
+   promise along with the JSON object */
+export function getAllFiles(auth_token, parent_id = 0) {
+  let url = `https://api.put.io/v2/files/list?oauth_token=${auth_token}&parent_id=${parent_id}`;
+  return new Promise((resolve, reject) => {
+    request
+      .get(url)
+      .end((err, res) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(JSON.parse(res.text).files);
+          }
+      });
+  });
+}
+
+/* Gets upto 50 videos in an account and returns
+a promise continaing an array of files on a single page */
+export function getVideos(auth_token, currentPage=1) {
+  console.log("Running getVideos");
+  let url = `https://api.put.io/v2/files/search/type:video/page/${currentPage}?oauth_token=${auth_token}`;
+  console.log(url);
+  return new Promise((resolve, reject) => {
+    request
+      .get(url)
+      .end((err, res) => {
+        if (err) {
+          reject(err);
+        } else {
+          // console.log("Files: " + JSON.parse(res.text).files.length);
+          resolve(JSON.parse(res.text).files)
+        }
+      });
+  });
+}
+
+/* Gets all videos in an account and returns a promise
+    continaing an array of all file objects */
+export function getAllVideos(auth_token, counter=1, arr=[]) {
+  var tempArray = [...arr];
+  return getVideos(auth_token, counter)
+    .then((result) => {
+      if (result.length === 0) {
+        // console.log(`result.length is zero \ntempArray length = ${tempArray.length}`);
+        return tempArray
+      } else {
+        // console.log('result.length is not zero');
+        tempArray.push(...result)
+        return getAllVideos(auth_token, counter + 1, tempArray)
+      }
+    })
+}
