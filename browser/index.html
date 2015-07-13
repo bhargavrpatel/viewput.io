@@ -22,8 +22,8 @@
 
       // Listen to the auth-result channel for asynchronous messages from the Main process
       ipc.on('auth-result', function (arg) {
-        riot.mount('hello-world', { name: arg.user.username })
-        riot.mount('file-list', { files: arg.files })
+        riot.mount('hello-world', { name: arg.user.username });
+        // riot.mount('file-list', { files: arg.files })
       });
     </script>
 

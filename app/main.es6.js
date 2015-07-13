@@ -13,6 +13,8 @@ let
     db        = new PouchDB('myDB', {db: require('memdown')}),
     putDriver = require('../browser/build/js/putioDriver.dist');
 
+    putDriver.dbInit();
+
 // If all windows are closed ...
 app.on('window-all-closed', () => {
   // Quit the application if we are not on an Apple machine (darwin)
@@ -39,7 +41,10 @@ app.on('ready', () => {
 
   ipc.on('auth-request', (event, arg) => {
     console.log("Got auth request");
-
+    putDriver.login().then((x) => {
+      console.log('Returned from login');
+      mainWindow.webContents.send('auth-result', x)
+    })
   });
 
   // Dereference window
