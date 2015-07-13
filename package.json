@@ -5,7 +5,6 @@
   "main": "app/main.dist.js",
   "scripts": {
     "build": "gulp transpile",
-    "start": "node_modules\\electron-prebuilt\\dist\\electron.exe .",
     "start": "gulp && node_modules\\electron-prebuilt\\dist\\electron.exe ."
   },
   "author": "Bhargav R. Patel",
@@ -17,7 +16,8 @@
   "dependencies": {
     "electron-prebuilt": "^0.29.1",
     "lodash": "^3.10.0",
-    "lowdb": "^0.10.1",
+    "memdown": "^1.0.0",
+    "pouchdb": "^3.6.0",
     "riot": "^2.2.2-beta",
     "superagent": "^1.2.0"
   },

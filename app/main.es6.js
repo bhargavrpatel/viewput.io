@@ -2,16 +2,15 @@
 require("babel/polyfill");
 
 let
-    _             = require('lodash'),          // Module to ease the pain!
-    low           = require('lowdb'),
+    mainWindow    = null,                       // Keep a global reference to avoid it being garbage collected
     app           = require('app'),
     ipc           = require('ipc'),             // Module to have interprocess communication
+    PouchDB       = require('pouchdb'),         // New database
     request       = require('superagent'),      // Module used to create/recieve HTTP requests
-    mainWindow    = null,                       // Keep a global reference to avoid it being garbage collected
     BrowserWindow = require('browser-window');  // Module to create browser windows
 
 let
-    db        = low('db.json'),
+    db        = new PouchDB('myDB', {db: require('memdown')}),
     putDriver = require('../browser/build/js/putioDriver.dist');
 
 // If all windows are closed ...
@@ -40,21 +39,7 @@ app.on('ready', () => {
 
   ipc.on('auth-request', (event, arg) => {
     console.log("Got auth request");
-    putDriver.login()
-      .then((x) => {
-        // User is logged in
-        console.log(`Welcome, ${x.user.username}!`);
 
-        let files = db('files').pluck('videos')[0];
-        x.files = files;
-        mainWindow.webContents.send("auth-result", x)
-        // putDriver.getAllVideos(x.token)
-        //   .then((y) => {
-        //     db('files')
-        //       .push({videos: y});
-        //     console.log(y);
-        //   })
-      });
   });
 
   // Dereference window
