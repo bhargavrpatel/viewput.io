@@ -10,8 +10,8 @@ let
     BrowserWindow = require('browser-window');  // Module to create browser windows
 
 let
-    db        = new PouchDB('myDB', {db: require('memdown')}),
-    putDriver = require('../browser/build/js/putioDriver.dist');
+    db            = new PouchDB('myDB', {db: require('memdown')}),
+    putDriver     = require('../browser/build/js/putioDriver.dist');
 
     putDriver.dbInit();
 
