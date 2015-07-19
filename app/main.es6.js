@@ -13,7 +13,8 @@ let
     db            = new PouchDB('myDB', {db: require('memdown')}),
     putDriver     = require('../browser/build/js/putioDriver.dist');
 
-    putDriver.dbInit();
+// Initialize the database
+putDriver.dbInit();
 
 // If all windows are closed ...
 app.on('window-all-closed', () => {
