@@ -142,28 +142,32 @@ export function getToken(retry = false, auth_code) {
 export function login(retry = false) {
   console.log("Running login function");
   let token;
+  let user;
   return new Promise((resolve, reject) => {
-    authenticate(retry)
-      .then((auth_code) => {
+    authenticate(retry).then((auth_code) => {
         console.log(`Grant code returned from authenticate: ${auth_code}`);
         return getToken(retry, auth_code)
-      })
-      .then((returned_token) => {
-        token = returned_token;
-        console.log(`Token returned from getToken: ${token}`);
-        return getUser(returned_token);
-      })
-      .then((userInfo) => {
-        const user = userInfo.info;
-        resolve({ user, token })
-      })
-      .catch((err) => {
-        if (err.code == "ECONNREFUSED" || (err.status === 400)) {
-          return login(true);
-        } else {
-          reject(err);
-        }
+    }).then((returned_token) => {
+      token = returned_token;
+      console.log(`Token returned from getToken: ${token}`);
+      return getUser(returned_token);
+    }).then((userInfo) => {
+      user = userInfo.info;
+      // resolve({ user, token })
+      return getAllFiles(token);
+    }).then((rootDir) => {
+      const files = rootDir.filter((element) => {
+        return (element['content_type'] === 'video/mp4' ||
+        element['content_type'] === 'application/x-directory');
       });
+      resolve({user, token, files})
+    }).catch((err) => {
+      if (err.code == "ECONNREFUSED" || (err.status === 400)) {
+        return login(true);
+      } else {
+        reject(err);
+      }
+    });
   });
 }
 
@@ -186,24 +190,24 @@ export function getUser(auth_token) {
       });
   });
 }
-//
-//
-// /* Get list of all files in an account and return a
-//    promise along with the JSON object */
-// export function getAllFiles(auth_token, parent_id = 0) {
-//   let url = `https://api.put.io/v2/files/list?oauth_token=${auth_token}&parent_id=${parent_id}`;
-//   return new Promise((resolve, reject) => {
-//     request
-//       .get(url)
-//       .end((err, res) => {
-//           if (err) {
-//             reject(err);
-//           } else {
-//             resolve(JSON.parse(res.text).files);
-//           }
-//       });
-//   });
-// }
+
+
+/* Get list of all files in an account and return a
+   promise along with the JSON object */
+export function getAllFiles(auth_token, parent_id = 0) {
+  let url = `https://api.put.io/v2/files/list?oauth_token=${auth_token}&parent_id=${parent_id}`;
+  return new Promise((resolve, reject) => {
+    request
+      .get(url)
+      .end((err, res) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(JSON.parse(res.text).files);
+          }
+      });
+  });
+}
 //
 // /* Gets upto 50 videos in an account and returns
 // a promise continaing an array of files on a single page */
