@@ -160,7 +160,7 @@ export function login(retry = false) {
         return (element['content_type'] === 'video/mp4' ||
         element['content_type'] === 'application/x-directory');
       });
-      resolve({user, token, files})
+      resolve({user, files})
     }).catch((err) => {
       if (err.code == "ECONNREFUSED" || (err.status === 400)) {
         return login(true);
