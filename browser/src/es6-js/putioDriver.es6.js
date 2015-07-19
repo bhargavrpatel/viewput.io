@@ -146,21 +146,20 @@ export function login(retry = false) {
   return new Promise((resolve, reject) => {
     authenticate(retry).then((auth_code) => {
         console.log(`Grant code returned from authenticate: ${auth_code}`);
-        return getToken(retry, auth_code)
+        return getToken(retry, auth_code);
     }).then((returned_token) => {
       token = returned_token;
       console.log(`Token returned from getToken: ${token}`);
       return getUser(returned_token);
     }).then((userInfo) => {
       user = userInfo.info;
-      // resolve({ user, token })
       return getAllFiles(token);
     }).then((rootDir) => {
       const files = rootDir.filter((element) => {
         return (element['content_type'] === 'video/mp4' ||
         element['content_type'] === 'application/x-directory');
       });
-      resolve({user, files})
+      resolve({user, files});
     }).catch((err) => {
       if (err.code == "ECONNREFUSED" || (err.status === 400)) {
         return login(true);
