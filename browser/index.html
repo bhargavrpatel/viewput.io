@@ -6,12 +6,21 @@
   </head>
   <body>
     <hello-world></hello-world>
+    <dashboard></dashboard>
     <button type="button" name="button" onclick="myFunction()">Authenticate me!</button>
 
     <script type="text/javascript">
       var riot = require('riot');
       var ipc = require('ipc');
+    </script>
 
+    <!-- Import our first test tag element and mount it to the DOM with the
+         name parameter as required by our custom component             -->
+    <!-- // <script type="text/javascript" src="./build/js/riot-components/test.tag.js"></script> -->
+    <script type="text/javascript" src="./build/js/riot-components/dashboard.tag.js"></script>
+
+
+    <script tpe="text/javascript">
       // User wishes to authenticate our application
       function myFunction() {
         // Use IPC to send a message on a specific channel from Render process to the Main process
@@ -21,12 +30,14 @@
 
       // Listen to the auth-result channel for asynchronous messages from the Main process
       ipc.on('auth-result', function (arg) {
-        riot.mount('hello-world', { name: arg.user.username });
+        console.log(arg);
+        // riot.mount('hello-world', { name: arg.user.username });
+        riot.mount('dashboard', {
+          name: arg.user.username,
+          disk: arg.user.disk,
+          files: arg.files
+        });
       });
     </script>
-
-    <!-- Import our first test tag element and mount it to the DOM with the
-         name parameter as required by our custom component             -->
-    <script type="text/javascript" src="./build/js/riot-components/test.tag.js"></script>
   </body>
 </html>
